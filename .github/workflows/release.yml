@@ -62,17 +62,17 @@ jobs:
           # First create zip archive of the app bundle
           zip -r pytk_gui_builder-${{ matrix.platform }}.zip dist/pytk_gui_builder.app
           
-          # Create DMG with professional layout
+          # Create DMG with professional layout optimized for 1200x722 background
           create-dmg \
             --volname "PyTK GUI Builder" \
             --volicon "assets/app.icns" \
-            --background "assets/app.png" \
+            --background "assets/macapp_bg.png" \
             --window-pos 200 120 \
-            --window-size 600 400 \
-            --icon-size 100 \
-            --icon "pytk_gui_builder.app" 175 120 \
+            --window-size 800 480 \
+            --icon-size 120 \
+            --icon "pytk_gui_builder.app" 200 280 \
             --hide-extension "pytk_gui_builder.app" \
-            --app-drop-link 450 120 \
+            --app-drop-link 600 280 \
             --no-internet-enable \
             "pytk_gui_builder-${{ matrix.platform }}.dmg" \
             "dist/pytk_gui_builder.app"

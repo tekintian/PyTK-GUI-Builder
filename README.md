@@ -12,6 +12,16 @@ PyTK GUI Builder 是一个基于 [PAGE](https://page.sourceforge.net/) 项目的
 - **主题和样式支持**：支持 Ttk 主题和自定义样式
 - **图像处理支持**：集成 Img 库，支持多种图像格式（JPEG、PNG、GIF 等）
 
+
+
+## 界面截图
+
+![main](./docs/main.jpg)
+
+
+![main](./docs/widget.jpg)
+
+
 ## 🚀 相比原版 PAGE 的改进
 
 ### 跨平台可执行文件支持
