@@ -1,0 +1,93 @@
+name: PyTK GUI Builder CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  release:
+    types: [ published ]
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [macos-15-intel, ubuntu-latest, windows-latest]
+        include:
+          - os: macos-15-intel
+            platform: Darwin64
+            python-version: '3.11'
+          - os: ubuntu-latest
+            platform: Linux64
+            python-version: '3.11'
+          - os: windows-latest
+            platform: win64
+            python-version: '3.11'
+            architecture: 'x64'
+          - os: windows-latest
+            platform: win32
+            python-version: '3.11'
+            architecture: 'x86'
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+        architecture: ${{ matrix.architecture || 'x64' }}
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pyinstaller
+
+    - name: Update spec file for ${{ matrix.platform }}
+      run: |
+        # Update the Img directory in spec file based on platform
+        if [ "${{ matrix.platform }}" = "Darwin64" ]; then
+          sed -i.bak "s/'Img\/Img1\.4\.13-[^']*'/'Img\/Img1\.4\.13-Darwin64'/g" pytk_gui_builder.spec
+        elif [ "${{ matrix.platform }}" = "Linux64" ]; then
+          sed -i.bak "s/'Img\/Img1\.4\.13-[^']*'/'Img\/Img1\.4\.13-Linux64'/g" pytk_gui_builder.spec
+        elif [ "${{ matrix.platform }}" = "win32" ]; then
+          sed -i.bak "s/'Img\/Img1\.4\.13-[^']*'/'Img\/Img1\.4\.13-win32'/g" pytk_gui_builder.spec
+        elif [ "${{ matrix.platform }}" = "win64" ]; then
+          sed -i.bak "s/'Img\/Img1\.4\.13-[^']*'/'Img\/Img1\.4\.13-win64'/g" pytk_gui_builder.spec
+        fi
+      shell: bash
+
+    - name: Build with PyInstaller
+      run: pyinstaller pytk_gui_builder.spec
+
+    - name: Create release archive
+      run: |
+        # Create appropriate archive based on platform
+        if [ "${{ matrix.platform }}" = "Darwin64" ]; then
+          # For macOS, create a zip archive of the app bundle
+          zip -r pytk_gui_builder-${{ matrix.platform }}.zip dist/pytk_gui_builder.app
+        elif [ "${{ matrix.platform }}" = "Linux64" ]; then
+          # For Linux, create a tar.gz archive
+          tar -czf pytk_gui_builder-${{ matrix.platform }}.tar.gz -C dist .
+        elif [[ "${{ matrix.platform }}" = "win32" || "${{ matrix.platform }}" = "win64" ]]; then
+          # For Windows, create a zip archive
+          powershell Compress-Archive -Path dist/* -DestinationPath pytk_gui_builder-${{ matrix.platform }}.zip
+        fi
+      shell: bash
+
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: pytk_gui_builder-${{ matrix.platform }}
+        path: |
+          dist/
+          pytk_gui_builder-${{ matrix.platform }}.*
+
+    - name: Upload to GitHub Release
+      if: github.event_name == 'release' && github.event.action == 'published'
+      uses: softprops/action-gh-release@v1
+      with:
+        files: pytk_gui_builder-${{ matrix.platform }}.*
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
