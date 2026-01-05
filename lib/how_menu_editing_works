@@ -1,0 +1,23 @@
+
+When menu editor is entered say with double clicking the toplevel
+window:
+
+vTcl:edit_target_menu in lib_core.tcl.
+      vTclWindow.vTclMenuEdit in menus.tcl
+         initProperties
+             discoverOptions which creates a dummy menu and obtains
+                 the configuration of each entry type.
+             Fills in disabled entry for each option even if it is not
+                 applicable.
+
+
+         fill_menu_list the left hand side and initializes it with
+		        <menu>.
+
+
+
+
+
+When a menu item is added to the left:
+     ::menu_edit::new_item in menus.tcl the item is added to the menu
+	    fill_menu_list adds the itemt to the left hand side

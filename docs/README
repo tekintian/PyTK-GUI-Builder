@@ -1,0 +1,24 @@
+
+
+PAGE is a drop and drag tool which helps to create Tkinter GUI interfaces for use within Python programs.  It is a fork of the program Visual Tcl which now produces Python code. PAGE builds multiple GUI windows and generates a working skeletal Python program using tk and ttk widgets. 
+
+It is aimed at a user who wants to rapidly construct a GUI and is willing to compromise generality for ease and speed of construction. It is a helper tool. It does not build an entire application but rather is aimed at building GUI windows.  It is not a Python Interactive Design Environment(IDE). Stated in other words, PAGE generates a Python classs which implements GUI windows and also supplies all of the boiler-plate code for execution or instantiating the GUI objects. If, like me, you have difficulty remembering all the little tricks of getting a GUI to actually appear on the screen, PAGE can show you code that will work.
+
+PAGE is written in Tcl/Tk but invoked within a Python wrapper. This means that PAGE will run on any system which has Python installed. Separate installation of Tcl/Tk is not required.
+
+The generated output is pure Python 3 and will run on any system supporting Python with Tkinter.
+
+The 8.1 release:
+
++ Changes the page.bat file, improving the initiation of PAGE on
+  Windows.
++ Improves the menu editor by showing only options available to the
+  selected menu item.
++ Supports tk and ttk menubuttons. Cut-copy-paste are not supported.
++ Improves popup or context menus by allowing the specification of the
+  function name.
++ Changes how the Attribute Editor and the Menu Editor treat the image
+  attribute.
++ Recognizes that PAGE does not currently work properly on macOS. This
+  is the result of the macOS support of tkinter.
+   
