@@ -3,6 +3,8 @@ name: PyTK GUI Builder CI
 on:
   push:
     branches: [ main ]
+    tags:
+      - 'v*'  # 匹配v开头的tag，如v1.0.0, v2.1.3等
   pull_request:
     branches: [ main ]
   release:
@@ -43,18 +45,9 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install pyinstaller
-
-    - name: Update spec file for ${{ matrix.platform }}
-      run: |
-        # Update the Img directory in spec file based on platform
+        # Install create-dmg for macOS DMG creation
         if [ "${{ matrix.platform }}" = "Darwin64" ]; then
-          sed -i.bak "s/'Img\/Img1\.4\.13-[^']*'/'Img\/Img1\.4\.13-Darwin64'/g" pytk_gui_builder.spec
-        elif [ "${{ matrix.platform }}" = "Linux64" ]; then
-          sed -i.bak "s/'Img\/Img1\.4\.13-[^']*'/'Img\/Img1\.4\.13-Linux64'/g" pytk_gui_builder.spec
-        elif [ "${{ matrix.platform }}" = "win32" ]; then
-          sed -i.bak "s/'Img\/Img1\.4\.13-[^']*'/'Img\/Img1\.4\.13-win32'/g" pytk_gui_builder.spec
-        elif [ "${{ matrix.platform }}" = "win64" ]; then
-          sed -i.bak "s/'Img\/Img1\.4\.13-[^']*'/'Img\/Img1\.4\.13-win64'/g" pytk_gui_builder.spec
+          brew install create-dmg
         fi
       shell: bash
 
@@ -65,8 +58,24 @@ jobs:
       run: |
         # Create appropriate archive based on platform
         if [ "${{ matrix.platform }}" = "Darwin64" ]; then
-          # For macOS, create a zip archive of the app bundle
+          # For macOS, create both zip and DMG formats
+          # First create zip archive of the app bundle
           zip -r pytk_gui_builder-${{ matrix.platform }}.zip dist/pytk_gui_builder.app
+          
+          # Create DMG with professional layout
+          create-dmg \
+            --volname "PyTK GUI Builder" \
+            --volicon "assets/app.icns" \
+            --background "assets/app.png" \
+            --window-pos 200 120 \
+            --window-size 600 400 \
+            --icon-size 100 \
+            --icon "pytk_gui_builder.app" 175 120 \
+            --hide-extension "pytk_gui_builder.app" \
+            --app-drop-link 450 120 \
+            --no-internet-enable \
+            "pytk_gui_builder-${{ matrix.platform }}.dmg" \
+            "dist/pytk_gui_builder.app"
         elif [ "${{ matrix.platform }}" = "Linux64" ]; then
           # For Linux, create a tar.gz archive
           tar -czf pytk_gui_builder-${{ matrix.platform }}.tar.gz -C dist .
@@ -80,14 +89,34 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: pytk_gui_builder-${{ matrix.platform }}
-        path: |
-          dist/
-          pytk_gui_builder-${{ matrix.platform }}.*
+        path: pytk_gui_builder-${{ matrix.platform }}.*
 
     - name: Upload to GitHub Release
-      if: github.event_name == 'release' && github.event.action == 'published'
+      if: (github.event_name == 'release' && github.event.action == 'published') || startsWith(github.ref, 'refs/tags/v')
       uses: softprops/action-gh-release@v1
       with:
         files: pytk_gui_builder-${{ matrix.platform }}.*
+        tag_name: ${{ github.ref_name }}
+        name: Release ${{ github.ref_name }}
+        body: |
+          PyTK GUI Builder ${{ github.ref_name }}
+          
+          ## 更新内容
+          - 跨平台GUI构建工具
+          - 支持Windows、macOS、Linux
+          - 拖放式界面设计
+          - 生成纯Python 3代码
+          
+          ## 下载说明
+          根据您的操作系统选择对应的构建版本：
+          - **Windows**: 选择 `pytk_gui_builder-win64.zip` 或 `pytk_gui_builder-win32.zip`
+          - **macOS**: 选择 `pytk_gui_builder-Darwin64.dmg` (推荐) 或 `pytk_gui_builder-Darwin64.zip`
+          - **Linux**: 选择 `pytk_gui_builder-Linux64.tar.gz`
+          
+          ## 使用说明
+          **macOS**: 下载DMG文件后，双击打开，将应用拖拽到Applications文件夹即可
+          **Windows/Linux**: 下载对应平台的压缩包，解压后直接运行可执行文件即可开始使用
+        draft: false
+        prerelease: false
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
